@@ -1,4 +1,4 @@
-# 🎓 Smart Campus: Smart Timetable & Study Planner
+# 🎓 Smart Campus: Smart Timetable & Study Planner 
 
 > **Theme 1: Smart Campus and Student Life**  
 > **Problem:** Students struggle to balance classes, assignments, and exam preparation.  
