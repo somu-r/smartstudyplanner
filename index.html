@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Smart Campus | Timetable & Study Planner</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          screens: {
+            'xs': '420px',
+          },
+          colors: {
+            primary: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased">
+  
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+          <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+        </div>
+        <div class="truncate">
+          <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <h1 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white leading-tight truncate">Smart Campus</h1>
+            <span class="px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 shrink-0">Planner AI</span>
+          </div>
+          <p class="hidden xs:block text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Intelligent Timetable & Dynamic Study Schedule</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+        <button id="themeToggle" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-manipulation" title="Toggle Theme">
+          <i data-lucide="moon" class="w-4 h-4 sm:w-5 sm:h-5 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 sm:w-5 sm:h-5 block dark:hidden"></i>
+        </button>
+
+        <button id="sampleDataBtn" class="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-manipulation" title="Load Student Presets">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+          <span class="hidden sm:inline">Presets</span>
+        </button>
+
+        <button id="exportIcsBtn" class="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-manipulation" title="Export to Calendar (.ICS)">
+          <i data-lucide="download" class="w-4 h-4 text-indigo-500"></i>
+          <span class="hidden md:inline">Export .ICS</span>
+        </button>
+
+        <button id="printBtn" class="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-medium rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition touch-manipulation" title="Print Timetable">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Print</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+
+    <!-- Top KPI & Feasibility Banner (2x2 on Mobile, 4x1 on Desktop) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      <!-- Card 1: Available Study Hours -->
+      <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Weekly Available</span>
+          <div class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+            <i data-lucide="clock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+        </div>
+        <div class="mt-1 sm:mt-2 flex items-baseline space-x-1 sm:space-x-2">
+          <span id="kpiAvailableHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">28</span>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-medium">hrs/wk</span>
+        </div>
+        <div class="mt-1 sm:mt-2 text-[10px] sm:text-xs text-slate-500 flex items-center justify-between">
+          <span class="truncate">Across 7 days</span>
+          <a href="#dailyHoursContainer" class="text-indigo-600 hover:underline shrink-0 ml-1">Edit</a>
+        </div>
+      </div>
+
+      <!-- Card 2: Required Study Hours -->
+      <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Required Effort</span>
+          <div class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+            <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+        </div>
+        <div class="mt-1 sm:mt-2 flex items-baseline space-x-1 sm:space-x-2">
+          <span id="kpiRequiredHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">24</span>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-medium">hrs needed</span>
+        </div>
+        <div class="mt-1 sm:mt-2 text-[10px] sm:text-xs text-slate-500 flex items-center justify-between">
+          <span id="kpiSubjectCount" class="truncate">4 Courses</span>
+          <a href="#subjectsPanel" class="text-indigo-600 hover:underline shrink-0 ml-1">Manage</a>
+        </div>
+      </div>
+
+      <!-- Card 3: Upcoming Deadlines -->
+      <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Deadlines</span>
+          <div class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
+            <i data-lucide="alert-circle" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+        </div>
+        <div class="mt-1 sm:mt-2 flex items-baseline space-x-1 sm:space-x-2">
+          <span id="kpiDeadlineCount" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3</span>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-medium">pending</span>
+        </div>
+        <div class="mt-1 sm:mt-2 text-[10px] sm:text-xs text-rose-600 dark:text-rose-400 font-medium truncate" id="kpiNextDeadline">
+          Next: OS Midterm (in 2d)
+        </div>
+      </div>
+
+      <!-- Card 4: Workload Feasibility Status -->
+      <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Workload Status</span>
+          <div id="feasibilityIconWrap" class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+            <i data-lucide="check-circle-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+        </div>
+        <div class="mt-1 sm:mt-2 flex items-baseline space-x-1 sm:space-x-2">
+          <span id="kpiFeasibilityText" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">Optimal</span>
+        </div>
+        <div class="mt-1 sm:mt-2 w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+          <div id="feasibilityProgressBar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 85%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile Navigation Switcher (Only visible on Mobile & Tablets, < lg) -->
+    <div id="mobileNavSwitcher" class="lg:hidden flex bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <button id="mobileTabScheduleBtn" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl transition bg-indigo-600 text-white shadow flex items-center justify-center space-x-1.5 touch-manipulation">
+        <i data-lucide="calendar" class="w-4 h-4"></i>
+        <span>Study Schedule</span>
+      </button>
+      <button id="mobileTabInputsBtn" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center space-x-1.5 touch-manipulation">
+        <i data-lucide="sliders" class="w-4 h-4"></i>
+        <span>Planner Inputs</span>
+      </button>
+    </div>
+
+    <!-- Main Workspace Split: Controls / Inputs on Left, Visual Plan on Right -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+      
+      <!-- ================= LEFT COLUMN: INPUT CONTROLS ================= -->
+      <aside id="leftInputsAside" class="lg:col-span-5 space-y-5 sm:space-y-6 hidden lg:block">
+
+        <!-- Tab Pills for Input Management -->
+        <div class="bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex space-x-1">
+          <button id="tabBtnHours" class="input-tab-btn flex-1 py-2 text-xs sm:text-sm font-semibold rounded-xl transition bg-indigo-600 text-white shadow touch-manipulation" data-tab="hoursPanel">
+            <span class="flex items-center justify-center space-x-1 sm:space-x-1.5">
+              <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Available Hours</span>
+              <span class="xs:hidden">Hours</span>
+            </span>
+          </button>
+          <button id="tabBtnSubjects" class="input-tab-btn flex-1 py-2 text-xs sm:text-sm font-semibold rounded-xl transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white touch-manipulation" data-tab="subjectsPanel">
+            <span class="flex items-center justify-center space-x-1 sm:space-x-1.5">
+              <i data-lucide="book" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Subjects</span>
+              <span class="xs:hidden">Courses</span>
+            </span>
+          </button>
+          <button id="tabBtnDeadlines" class="input-tab-btn flex-1 py-2 text-xs sm:text-sm font-semibold rounded-xl transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white touch-manipulation" data-tab="deadlinesPanel">
+            <span class="flex items-center justify-center space-x-1 sm:space-x-1.5">
+              <i data-lucide="calendar-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Deadlines</span>
+              <span class="xs:hidden">Exams</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- PANEL 1: AVAILABLE HOURS & DAILY PREFERENCES -->
+        <div id="hoursPanel" class="input-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 sm:space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div>
+              <h2 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-indigo-500"></i>
+                Daily Study Capacity
+              </h2>
+              <p class="text-[11px] sm:text-xs text-slate-500">Adjust hours you can dedicate to study</p>
+            </div>
+            <button id="resetHoursBtn" class="text-xs text-slate-500 hover:text-indigo-600 touch-manipulation">Reset default</button>
+          </div>
+
+          <!-- Day by Day Sliders -->
+          <div id="dailyHoursContainer" class="space-y-3 sm:space-y-3.5">
+            <!-- Dynamically populated via JS for Mon-Sun -->
+          </div>
+
+          <!-- Session Slot Preferences -->
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Focus Slot Duration</label>
+              <select id="slotDurationSelect" class="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
+                <option value="1">1 Hour Blocks (Standard)</option>
+                <option value="1.5">1.5 Hours Blocks (Deep Work)</option>
+                <option value="2">2 Hours Blocks (Intensive)</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Preferred Study Window</label>
+              <select id="preferredWindowSelect" class="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
+                <option value="balanced">Balanced (Morning + Evening)</option>
+                <option value="morning">Morning Person (08:00 - 13:00)</option>
+                <option value="evening">Night Owl (17:00 - 23:00)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2: SUBJECTS MANAGEMENT -->
+        <div id="subjectsPanel" class="input-panel hidden bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 sm:space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div>
+              <h2 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2">
+                <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i>
+                Course Subjects
+              </h2>
+              <p class="text-[11px] sm:text-xs text-slate-500">Configure courses, priority & difficulty</p>
+            </div>
+            <button id="openAddSubjectBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1 shadow-sm transition touch-manipulation">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
+            </button>
+          </div>
+
+          <!-- Subject List -->
+          <div id="subjectList" class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- PANEL 3: DEADLINES & ASSIGNMENTS TRACKER -->
+        <div id="deadlinesPanel" class="input-panel hidden bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 sm:space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div>
+              <h2 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2">
+                <i data-lucide="target" class="w-4 h-4 text-indigo-500"></i>
+                Deadlines & Exams
+              </h2>
+              <p class="text-[11px] sm:text-xs text-slate-500">Track exams, assignments & prep time</p>
+            </div>
+            <button id="openAddDeadlineBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1 shadow-sm transition touch-manipulation">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
+            </button>
+          </div>
+
+          <!-- Deadlines List -->
+          <div id="deadlineList" class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Quick Pomodoro Focus Timer Widget -->
+        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-lg border border-indigo-700/50 space-y-3 sm:space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span class="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-indigo-200">Study Companion</span>
+            </div>
+            <span id="pomoModeBadge" class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 font-medium">Focus 25m</span>
+          </div>
+
+          <div class="text-center py-1 sm:py-2">
+            <div id="pomoTimeDisplay" class="text-4xl sm:text-5xl font-black tracking-tight font-mono">25:00</div>
+            <p id="pomoTaskLabel" class="text-xs text-indigo-200 mt-2 truncate px-2">Select a study session below to start focus</p>
+          </div>
+
+          <div class="flex items-center justify-center space-x-2 sm:space-x-3">
+            <button id="pomoStartBtn" class="px-4 sm:px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-semibold text-xs flex items-center space-x-1.5 shadow transition touch-manipulation">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span id="pomoStartText">Start Session</span>
+            </button>
+            <button id="pomoResetBtn" class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition touch-manipulation" title="Reset Timer">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+            <button id="pomoCompleteBtn" class="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center space-x-1 transition touch-manipulation" title="Complete block">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Done</span>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ================= RIGHT COLUMN: SCHEDULE VIEWS & ANALYTICS ================= -->
+      <section id="rightScheduleSection" class="lg:col-span-7 space-y-5 sm:space-y-6 block">
+
+        <!-- Top Schedule Tabs & View Toggles -->
+        <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+          <div class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
+            <button id="viewGridBtn" class="view-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white shadow-sm flex items-center space-x-1 sm:space-x-1.5 shrink-0 touch-manipulation">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Weekly Timetable</span>
+              <span class="xs:hidden">Timetable</span>
+            </button>
+            <button id="viewAgendaBtn" class="view-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center space-x-1 sm:space-x-1.5 shrink-0 touch-manipulation">
+              <i data-lucide="list-todo" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Today's Agenda</span>
+              <span class="xs:hidden">Today</span>
+            </button>
+            <button id="viewAnalyticsBtn" class="view-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center space-x-1 sm:space-x-1.5 shrink-0 touch-manipulation">
+              <i data-lucide="pie-chart" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+              <span class="hidden xs:inline">Workload Chart</span>
+              <span class="xs:hidden">Analytics</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Re-generate indicator badge -->
+          <div class="flex items-center space-x-1.5 text-[11px] sm:text-xs text-slate-500 shrink-0">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="font-medium text-emerald-600 dark:text-emerald-400">Live Balanced</span>
+          </div>
+        </div>
+
+        <!-- VIEW 1: WEEKLY TIMETABLE GRID -->
+        <div id="weeklyGridView" class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5 sm:space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2">
+                <i data-lucide="sparkle" class="w-4 h-4 text-indigo-500"></i>
+                Personalized Weekly Schedule
+              </h3>
+              <p class="text-[11px] sm:text-xs text-slate-500">Optimized across available hours, subject difficulty, and deadlines</p>
+            </div>
+            
+            <div class="flex items-center space-x-2 shrink-0">
+              <span class="text-[11px] sm:text-xs text-slate-400">Week:</span>
+              <span id="currentWeekRange" class="text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 sm:px-2.5 py-1 rounded-lg">Current Week</span>
+            </div>
+          </div>
+
+          <!-- Mobile Day Filter Strip (Only visible on < lg screens) -->
+          <div id="mobileDayFilterWrap" class="lg:hidden flex items-center space-x-1.5 overflow-x-auto pb-1.5 no-scrollbar">
+            <button class="mobile-day-filter px-3 py-1.5 text-xs font-bold rounded-xl transition bg-indigo-600 text-white shadow-sm shrink-0 touch-manipulation" data-day="all">All 7 Days</button>
+            <button class="mobile-day-filter px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="today">Today</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="mon">Mon</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="tue">Tue</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="wed">Wed</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="thu">Thu</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="fri">Fri</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="sat">Sat</button>
+            <button class="mobile-day-filter px-2.5 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 touch-manipulation" data-day="sun">Sun</button>
+          </div>
+
+          <!-- 7-Day Timetable Grid Container (Smooth swipe on mobile, 7 cols on desktop) -->
+          <div class="overflow-x-auto pb-2 snap-x no-scrollbar">
+            <div id="timetableGrid" class="flex lg:grid lg:grid-cols-7 gap-2.5 sm:gap-3">
+              <!-- Monday to Sunday Columns injected by JS -->
+            </div>
+          </div>
+
+          <!-- Schedule Footer Note -->
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between text-[11px] sm:text-xs text-slate-400 gap-2">
+            <div class="flex items-center space-x-2.5 sm:space-x-3">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Exam Prep</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Assignment</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Core Review</span>
+            </div>
+            <div class="text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline touch-manipulation" id="rebalanceBtn">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1"></i> Re-optimize Plan
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: TODAY'S AGENDA VIEW -->
+        <div id="todayAgendaView" class="hidden bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2" id="todayAgendaTitle">
+                <i data-lucide="check-square" class="w-4 h-4 text-emerald-500"></i>
+                Today's Action Plan
+              </h3>
+              <p class="text-[11px] sm:text-xs text-slate-500">High-focus study sessions scheduled for today</p>
+            </div>
+            <span id="todayProgressBadge" class="text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 shrink-0">
+              0 / 0 Completed
+            </span>
+          </div>
+
+          <div id="todayTasksList" class="space-y-2.5 sm:space-y-3">
+            <!-- Dynamic task items injected by JS -->
+          </div>
+        </div>
+
+        <!-- VIEW 3: WORKLOAD & ANALYTICS VIEW -->
+        <div id="workloadAnalyticsView" class="hidden bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 sm:space-y-6">
+          <div class="border-b border-slate-100 dark:border-slate-700 pb-3">
+            <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-500"></i>
+              Workload Distribution & Feasibility Analysis
+            </h3>
+            <p class="text-[11px] sm:text-xs text-slate-500">Visual breakdown of hours per course and daily stress balance</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-center">
+            <!-- Donut Chart: Subject Allocation -->
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 flex flex-col items-center">
+              <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">Hours per Subject</h4>
+              <div class="w-full max-w-[240px] aspect-square relative flex items-center justify-center">
+                <canvas id="subjectChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Bar Chart: Daily Study Hours -->
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 flex flex-col items-center">
+              <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">Daily Hours vs Capacity</h4>
+              <div class="w-full h-56 relative">
+                <canvas id="dailyChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Advice / Recommendations Card -->
+          <div id="aiRecommendationsBox" class="p-3.5 sm:p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 space-y-2">
+            <div class="flex items-center space-x-2 text-indigo-800 dark:text-indigo-300 font-semibold text-xs uppercase tracking-wider">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>Study Planner Algorithm Insights</span>
+            </div>
+            <ul id="recommendationsList" class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc pl-5">
+              <!-- Dynamically populated recommendations -->
+            </ul>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal: Add / Edit Subject -->
+  <div id="subjectModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto modal-enter">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+        <h3 id="subjectModalTitle" class="font-bold text-slate-900 dark:text-white text-base">Add New Subject</h3>
+        <button id="closeSubjectModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="subjectForm" class="space-y-4">
+        <input type="hidden" id="editSubjectId" value="">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Subject Name & Code</label>
+          <input type="text" id="subjectNameInput" required placeholder="e.g. CS301 Operating Systems" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Difficulty Level</label>
+            <select id="subjectDifficultyInput" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="1">1 - Easy / Light</option>
+              <option value="2" selected>2 - Moderate</option>
+              <option value="3">3 - Challenging</option>
+              <option value="4">4 - High Intensity</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Weekly Min Hours</label>
+            <input type="number" id="subjectMinHoursInput" min="1" max="20" value="3" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Color Theme</label>
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2" id="colorPickerWrap">
+            <!-- Color options will be generated -->
+          </div>
+          <input type="hidden" id="subjectColorInput" value="#6366f1">
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" id="cancelSubjectBtn" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow">Save Subject</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Deadline -->
+  <div id="deadlineModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto modal-enter">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+        <h3 id="deadlineModalTitle" class="font-bold text-slate-900 dark:text-white text-base">Add Assessment Deadline</h3>
+        <button id="closeDeadlineModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="deadlineForm" class="space-y-4">
+        <input type="hidden" id="editDeadlineId" value="">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assessment / Task Title</label>
+          <input type="text" id="deadlineTitleInput" required placeholder="e.g. Midterm Exam, Assignment 2, Paper" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Subject</label>
+            <select id="deadlineSubjectSelect" required class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <!-- Dynamically populated from subjects -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Type</label>
+            <select id="deadlineTypeSelect" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Exam">Major Exam</option>
+              <option value="Assignment" selected>Assignment</option>
+              <option value="Project">Project / Lab</option>
+              <option value="Quiz">Quiz / Test</option>
+              <option value="Reading">Reading / Homework</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
+            <input type="date" id="deadlineDateInput" required class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Estimated Hours Needed</label>
+            <input type="number" id="deadlineHoursInput" min="1" max="40" value="6" required class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" id="cancelDeadlineBtn" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow">Save Deadline</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Presets Selection -->
+  <div id="presetsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto modal-enter">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-900 dark:text-white text-base">Select Student Profile Preset</h3>
+        <button id="closePresetsModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <button class="preset-choice-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 text-left transition flex items-start space-x-3 touch-manipulation" data-preset="cs">
+          <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 shrink-0">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-bold text-xs text-slate-900 dark:text-white">Computer Science Major (Heavy Lab & Code)</div>
+            <div class="text-[11px] text-slate-500">Algorithms, Operating Systems, Machine Learning, Linear Algebra</div>
+          </div>
+        </button>
+
+        <button class="preset-choice-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 text-left transition flex items-start space-x-3 touch-manipulation" data-preset="premed">
+          <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 shrink-0">
+            <i data-lucide="activity" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-bold text-xs text-slate-900 dark:text-white">Pre-Med / Biology Student (Heavy Memorization)</div>
+            <div class="text-[11px] text-slate-500">Organic Chemistry, Anatomy, Biochemistry, Statistics</div>
+          </div>
+        </button>
+
+        <button class="preset-choice-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 text-left transition flex items-start space-x-3 touch-manipulation" data-preset="examweek">
+          <div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 shrink-0">
+            <i data-lucide="flame" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-bold text-xs text-slate-900 dark:text-white">Finals / Midterms Crunch Week</div>
+            <div class="text-[11px] text-slate-500">3 high-stake exams back-to-back with strict deadline weighting</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button id="cancelPresetsBtn" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio element for Pomodoro chime -->
+  <audio id="chimeAudio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+  <script>
+    // Initialize Lucide icons on DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

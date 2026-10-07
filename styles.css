@@ -1,0 +1,185 @@
+/* Custom Styles for Smart Campus Timetable & Study Planner */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* Hide scrollbars utility (for touch swipes) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Day Column Grid Styling */
+.day-column {
+  min-height: 440px;
+  transition: all 0.2s ease-in-out;
+}
+
+@media (min-width: 1024px) {
+  .day-column {
+    min-height: 520px;
+  }
+}
+
+.day-column.is-today {
+  border-color: #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.04);
+}
+
+/* Touch Snap Scrolling on Mobile */
+.snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Session Slot Block */
+.session-block {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left-width: 4px;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.session-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+}
+
+.session-block.completed {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+  text-decoration: line-through;
+}
+
+/* Color swatch selection */
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, ring 0.15s ease;
+  touch-action: manipulation;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.selected {
+  ring-width: 2px;
+  ring-offset-width: 2px;
+  transform: scale(1.15);
+}
+
+/* Slider Touch Optimization */
+input[type=range] {
+  accent-color: #6366f1;
+  touch-action: pan-y;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive Modal Animations */
+.modal-enter {
+  animation: modalScale 0.2s ease-out forwards;
+}
+
+@keyframes modalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Print Stylesheet */
+@media print {
+  header, 
+  aside, 
+  #mobileNavSwitcher,
+  #mobileDayFilterWrap,
+  #viewAgendaBtn, 
+  #viewAnalyticsBtn, 
+  #rebalanceBtn, 
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .lg\:col-span-7,
+  #rightScheduleSection {
+    width: 100% !important;
+    display: block !important;
+  }
+
+  #weeklyGridView {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  #timetableGrid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .day-column {
+    min-height: auto !important;
+    border: 1px solid #e2e8f0 !important;
+    page-break-inside: avoid;
+    width: 100% !important;
+  }
+
+  .session-block {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    break-inside: avoid;
+  }
+}

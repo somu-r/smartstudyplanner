@@ -1,0 +1,19 @@
+{
+  "name": "smart-timetable-study-planner",
+  "version": "1.0.0",
+  "description": "Smart Campus and Student Life: Smart Timetable and Study Planner Web Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "timetable",
+    "study-planner",
+    "smart-campus",
+    "education",
+    "productivity",
+    "scheduling-algorithm"
+  ],
+  "author": "Web App Developer",
+  "license": "MIT"
+}
